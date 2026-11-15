@@ -123,3 +123,121 @@ function create_parity_preserving_cache(gates)
 
     return data
 end
+
+
+"""
+    create_number_conserving_cache(gates;
+        filename="two_qubit_number_conserving.jls",
+        source_cache="two_qubit_parity_preserving.jls")
+
+Filter a supplied parity-preserving gate vector for number-conserving
+two-qubit Clifford gates, then save the result.
+"""
+function create_number_conserving_cache(
+    gates::AbstractVector;
+    filename="two_qubit_number_conserving.jls",
+    source_cache="two_qubit_parity_preserving.jls"
+)
+    isempty(gates) && throw(ArgumentError("The input gate pool is empty."))
+
+    # all(is_parity_preserving, gates) ||
+    #     throw(ArgumentError(
+    #         "create_number_conserving_cache expects a parity-preserving gate pool."
+    #     ))
+
+    number_conserving_gates = filter(is_number_conserving, gates)
+
+    data = (
+        metadata=(
+            number_of_qubits=2,
+            source_cache=source_cache,
+            source_gate_count=length(gates),
+            number_conserving_gate_count=length(number_conserving_gates),
+            gate_type=string(typeof(first(gates))),
+            filter="is_number_conserving",
+            conserved_quantity="N = (I - Z₁)/2 + (I - Z₂)/2",
+            filtering_condition="U (Z₁ + Z₂) U† = Z₁ + Z₂"
+        ),
+        gates=number_conserving_gates
+    )
+
+    save_cache(data, filename)
+
+    println("Input parity-preserving gates: ", length(gates))
+    println("Number-conserving gates: ", length(number_conserving_gates))
+
+    return data
+end
+
+
+"""
+    create_matchgate_cache(gates;
+        filename="two_qubit_matchgates.jls",
+        source_cache="two_qubit_parity_preserving.jls")
+
+Filter a supplied parity-preserving gate vector for two-mode matchgate
+Cliffords, then save the result.
+"""
+function create_matchgate_cache(
+    gates::AbstractVector;
+    filename="two_qubit_matchgates.jls",
+    source_cache="two_qubit_parity_preserving.jls"
+)
+    isempty(gates) && throw(ArgumentError("The input gate pool is empty."))
+
+    # all(is_parity_preserving, gates) ||
+    #     throw(ArgumentError(
+    #         "create_matchgate_cache expects a parity-preserving gate pool."
+    #     ))
+
+    matchgate_gates = filter(is_matchgate, gates)
+
+    data = (
+        metadata=(
+            number_of_qubits=2,
+            source_cache=source_cache,
+            source_gate_count=length(gates),
+            matchgate_gate_count=length(matchgate_gates),
+            gate_type=string(typeof(first(gates))),
+            filter="is_matchgate",
+            majorana_operators=("X₁", "Y₁", "Z₁X₂", "Z₁Y₂"),
+            filtering_condition="Majoranas map to a signed permutation with determinant +1"
+        ),
+        gates=matchgate_gates
+    )
+
+    save_cache(data, filename)
+
+    println("Input parity-preserving gates: ", length(gates))
+    println("Matchgate Clifford gates: ", length(matchgate_gates))
+
+    return data
+end
+
+
+function create_number_conserving_matchgate_cache(gates::AbstractVector)
+    
+    isempty(gates) && throw(ArgumentError("The input gate pool is empty."))
+
+    number_conserving_matchgates = filter(is_number_conserving_matchgate, gates)
+
+    data = (
+        metadata=(
+            number_of_qubits=2,
+            source_gate_count=length(gates),
+            number_conserving_matchgate_count=length(number_conserving_matchgates),
+            gate_type=string(typeof(first(gates))),
+            filter="is_number_conserving_matchgate",
+            filtering_condition="Number conservation and Gaussianity"
+        ),
+        gates=number_conserving_matchgates
+    )
+
+    saved_file = save_cache(data, "two_qubit_number_conserving_matchgates.jls")
+
+    println("File saved to: ", saved_file)
+    println("Filtered gates: ", length(number_conserving_matchgates))
+
+    return data
+
+end

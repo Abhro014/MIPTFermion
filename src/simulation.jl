@@ -82,8 +82,8 @@ end
 function ensemble_average(
     pool::ParityCliffordPool,
     nqubits::Int;
-    ntraj::Int=100,
-    max_steps::Int=1000,
+    ntraj::Int=1000,
+    max_steps::Int=100,
     seed::Int=1234,
     measure::VonNeumannEntropy=VonNeumannEntropy(),
     check_saturation::Bool=true,

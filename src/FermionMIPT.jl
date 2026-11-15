@@ -16,6 +16,9 @@ include("simulation.jl")
 
 export generate_two_qubit_cliffords
 export is_parity_preserving
+export is_number_conserving
+export is_matchgate
+export is_number_conserving_matchgate
 
 export AbstractGatePool
 export ParityCliffordPool
@@ -38,6 +41,9 @@ export ensemble_average
 
 export create_clifford_cache
 export create_parity_preserving_cache
+export create_number_conserving_cache
+export create_matchgate_cache
+export create_number_conserving_matchgate_cache
 
 export save_cache
 export load_cache
