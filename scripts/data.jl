@@ -3,7 +3,7 @@ using CSV
 using DataFrames
 
 function save_data_csv(
-    result::SimulationResult,
+    result::FermionMIPT.SimulationResult,
     filepath::String
 )
 
@@ -20,7 +20,7 @@ function save_data_csv(
         half_chain_size=fill(metadata.half_chain_size, npoints),
         ntraj=fill(metadata.ntraj, npoints),
         seed=fill(metadata.seed, npoints),
-        gate_pool=fill(metadata.gate_pool, npoints),
+        gate_pool=fill(result.pool_type, npoints),
         initial_state=fill(metadata.initial_state, npoints),
         entropy_measure=fill(metadata.entropy_measure, npoints),
         measurement_protocol=fill(metadata.measurement_protocol, npoints),

@@ -2,7 +2,7 @@
 using Plots
 
 function make_plot(
-    result::SimulationResult;
+    result::FermionMIPT.SimulationResult;
     savepath::Union{Nothing,String}=nothing
 )
 
@@ -21,6 +21,7 @@ function make_plot(
     if savepath !== nothing
         mkpath(dirname(abspath(savepath)))
         savefig(p, savepath)
+        println("Plot is saved to: ", savepath)
     end
 
     return p

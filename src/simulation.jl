@@ -5,6 +5,8 @@ struct SimulationResult
     stderr::Vector{Float64}
     trajectory_entropies::Matrix{Float64}
     saturated::Bool
+    pool_type::Symbol
+    timestamp::String
     metadata::NamedTuple
 end
 
@@ -53,6 +55,7 @@ end
 
 function simulate_circuit(
     circuit::BrickWallCircuit;
+    measurement_rate::Float64=0.0,
     measure::VonNeumannEntropy=VonNeumannEntropy()
 )
 
@@ -63,6 +66,9 @@ function simulate_circuit(
 
     for step in circuit.steps
         apply_timestep!(state, step)
+        if measurement_rate > 0.0
+            local_measurement!(state, measurement_rate)
+        end
         push!(entropies, half_chain_entropy(state, measure))
     end
 
@@ -80,18 +86,20 @@ end
 # Saturation is checked using the ensemble mean.
 
 function ensemble_average(
-    pool::ParityCliffordPool,
+    pool::AbstractGatePool,
     nqubits::Int;
     ntraj::Int=1000,
-    max_steps::Int=100,
+    max_steps::Int=8*nqubits,
     seed::Int=1234,
     measure::VonNeumannEntropy=VonNeumannEntropy(),
-    check_saturation::Bool=true,
+    check_saturation::Bool=false,
     window::Int=10,
     min_steps::Union{Nothing,Int}=nothing,
     atol::Float64=1e-3,
     rtol::Float64=1e-3,
-    measurement_protocol=nothing
+    measurement_protocol::Symbol=:none,
+    measurement_rate::Float64=0.0,
+    measurement_strength::Float64=1.0
 )
 
     ntraj >= 1 ||
@@ -99,10 +107,6 @@ function ensemble_average(
 
     max_steps >= 1 ||
         throw(ArgumentError("max_steps must be positive."))
-
-    # Measurements are deliberately not implemented in this version.
-    measurement_protocol === nothing ||
-        throw(ArgumentError("Mid-circuit measurements are not implemented yet."))
 
     rng = MersenneTwister(seed)
 
@@ -136,15 +140,27 @@ function ensemble_average(
 
     required_steps = isnothing(min_steps) ? 2 * window : min_steps
 
-    # Evolve all trajectories synchronously.
+    # Evolve and measure all trajectories synchronously.
+    # It does not store measurement data, but can be done on demand.
+    # The measurement history then can be pushed to the SimulationResult.
     for depth in 1:max_steps
 
         for trajectory in 1:ntraj
 
-            apply_timestep!(
+            state = apply_timestep!(
                 states[trajectory],
                 circuits[trajectory].steps[depth]
             )
+
+            # apply measurement on `state`
+            if measurement_rate > 0.0
+                state, _ = local_measurement!(
+                    state,
+                    measurement_rate;
+                    rng=rng
+                )
+            end
+
 
             entropy_data[trajectory, depth+1] =
                 half_chain_entropy(states[trajectory], measure)
@@ -188,11 +204,12 @@ function ensemble_average(
         seed=seed,
         requested_max_steps=max_steps,
         completed_steps=completed_steps,
-        gate_pool="parity_preserving_cliffords",
         initial_state="vacuum",
         entropy_measure="von_neumann",
-        measurement_protocol="none",
-        saturated=saturated
+        saturated=saturated,
+        measurement_protocol=measurement_protocol,
+        measurement_strength=measurement_strength,
+        measurement_rate=measurement_rate
     )
 
     return SimulationResult(
@@ -201,6 +218,8 @@ function ensemble_average(
         stderr,
         final_data,
         saturated,
+        nameof(typeof(pool)),
+        Dates.format(now(), "yyyymmdd_HHmmss"),
         metadata
     )
 end
