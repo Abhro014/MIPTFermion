@@ -24,6 +24,7 @@ function save_data_csv(
         initial_state=fill(metadata.initial_state, npoints),
         entropy_measure=fill(metadata.entropy_measure, npoints),
         measurement_protocol=fill(metadata.measurement_protocol, npoints),
+        measurement_rate=fill(metadata.measurement_rate, npoints),
         completed_steps=fill(metadata.completed_steps, npoints),
         saturated=fill(metadata.saturated, npoints)
     )

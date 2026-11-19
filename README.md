@@ -1,10 +1,7 @@
 # FermionMIPT
 This repository contains the source code for the Julia package **FermionMIPT.jl**. The package is designed to study **Measurement-Induced Phase Transitions (MIPT)** in fermionic systems using Clifford circuits and stabilizer-formalism simulation. The below codes are mostly written in Julia, while a minor fraction of it, for data visualization and processing, might be done in Python. The package is structured to provide a comprehensive framework for simulating and analyzing MIPT phenomena in fermionic systems.
-
-## FermionMIPT.jl
-> A Julia package for studying **Measurement-Induced Phase Transitions (MIPT)** in fermionic systems using Clifford circuits and stabilizer-formalism simulation.
-
-
+--------
+## Directory Structure
 ```
 .
 ├── LICENSE   
@@ -32,6 +29,11 @@ This repository contains the source code for the Julia package **FermionMIPT.jl*
 │   └── simulation.jl
 └── test
 ```
+
+## FermionMIPT.jl
+> A Julia package for studying **Measurement-Induced Phase Transitions (MIPT)** in fermionic systems using Clifford circuits and stabilizer-formalism simulation.
+
+
 
 `./src` contains the main source code of the package. We define a module named `FermionMIPT` inside `./src/FermionMIPT.jl`. The name of the julia scripts explains the functionality of the structs/functions present therein. The useful contents are described below for a quick reference.
 
@@ -84,7 +86,23 @@ This repository contains the source code for the Julia package **FermionMIPT.jl*
 
 The relevant data in csv format are kept in the `./results/simulations` folder, while the plots are stored in the `./results/plots` folder. The `./demo.jl` script can be used to create the cache. The `./run.jl` script can be used to run the simulations and generate the plots. It uses `./scripts/data.jl` and `./scripts/plots.jl` scripts for creating the data files and images.
 
+## plots.jl
+The file `./scripts/plots.jl` contains the functions for plotting the results of the simulations. 
+
+It has `save_plot(p::Plots.Plot, savepath::String)` that saves the plot `p` at `savepath`. 
+
+The function `make_plot(result::FermionMIPT.SimulationResult; savepath::Union{Nothing,String}=nothing, p::Plots.Plot)` is made to use in used in two modes. If running for a particular number of qubits with a fixed measurement rate, you do not need to provide `p` parameter, however for plotting different number of qubits under a particular measurement rate, (scaling of entanglement under a given rate of measurement), we should pass the `p` parameter, preferably an empty plot, to the function. The function will then add the data to the plot and return it.  
+
 ## TODO:
 - [ ] Implement weak-measurement protocols
 - [ ] Allow to use gates other than Cliffords, say the generic set of matchgates
 - [ ] Use different measures of entanglement, such as Renyi entropies, mutual information, etc. 
+- [ ] Implement definitions of Entanglement Power and Gate Typicality, Gate Criticality 
+
+----------
+
+## Issues
+1. `./analysis.jl` shows there is a significant amount of fluctuations in the data points, adding more data points to them may give better fitting.
+
+## Remarks
+1. The final plot indeed shows the fragile nature of vloume-law entanglement under matchgate evolution. 
