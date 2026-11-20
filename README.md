@@ -97,7 +97,11 @@ The function `make_plot(result::FermionMIPT.SimulationResult; savepath::Union{No
 - [ ] Implement weak-measurement protocols
 - [ ] Allow to use gates other than Cliffords, say the generic set of matchgates
 - [ ] Use different measures of entanglement, such as Renyi entropies, mutual information, etc. 
-- [ ] Implement definitions of Entanglement Power and Gate Typicality, Gate Criticality 
+- [ ] Modularize the gate loader from `./run.jl` and put them to `./src/gates.jl` or `./src/gate_pools.jl`.
+- [ ] Add `./src/states.jl` to define various non-trivial parity-preserving states.
+- [ ] Implement definitions of Entanglement Power and Gate Typicality, Gate Criticality
+- [ ] Make a list of results: accuracy of result, for which gate what result do we gate, make a case summary for each types of gates. Do we see a transition, what kind of transition, etc.
+
 
 ----------
 

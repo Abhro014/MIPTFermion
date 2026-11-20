@@ -85,53 +85,27 @@ function process_measurement_rate(pool_type, measurement_rate; fraction=0.25)
 end
 
 
-# plotting function
-function plot_entropy_scaling(data, measurement_rate; path)
-    p = plot(
-        data.nqubits,
-        data.mean_entropy;
-        marker=:circle,
-        linewidth=2,
-        xlabel="Number of qubits (N)",
-        ylabel="Mean entropy",
-        title="Measurement rate = $measurement_rate",
-        label="Simulation",
-        legend=:topleft
-    )
-
-    if path !== nothing
-        filename = "entropy_scaling_for_$(measurement_rate)_rate_of_measurements.png"
-        savepath = joinpath(path, filename)
-        mkpath(dirname(abspath(savepath)))
-        savefig(p, savepath)
-        println("Plot is saved to: ", savepath)
-    end
-
-    return p
-end
-
-
 # fit functions
 function linear_fit(x, y)
     X = hcat(ones(length(x)), x)
-
+    
     coefficients = X \ y
-
+    
     y_fit = X * coefficients
-
+    
     ss_res = sum((y .- y_fit) .^ 2)
     ss_tot = sum((y .- mean(y)) .^ 2)
-
+    
     r2 = ss_tot == 0 ? NaN : 1 - ss_res / ss_tot
-
+    
     return (
         intercept=coefficients[1],
         slope=coefficients[2],
         r2=r2,
         fitted_values=y_fit
-    )
+        )
 end
-
+    
 function fit_entropy(data)
     N = Float64.(data.nqubits)
     S = Float64.(data.mean_entropy)
@@ -141,10 +115,10 @@ function fit_entropy(data)
 
     # Power-law fit: log(S) = log(A) + alpha*log(N)
     power_fit = linear_fit(log.(N), log.(S))
-
+    
     A = exp(power_fit.intercept)
     alpha = power_fit.slope
-
+    
     # Logarithmic fit: S = a*log(N) + b
     log_fit = linear_fit(log.(N), S)
 
@@ -157,35 +131,72 @@ function fit_entropy(data)
         b=log_fit.intercept,
         log_r2=log_fit.r2,
         log_values=log_fit.fitted_values
+        )
+end
+    
+
+
+# plotting function
+function plot_entropy_scaling(data, measurement_rate, fit, pool_type; path)
+    p = plot(
+        data.nqubits,
+        data.mean_entropy;
+        marker=:circle,
+        linewidth=2,
+        xlabel="Number of qubits (N)",
+        ylabel="Mean entropy",
+        title="Gate Pool = $(pool_type)\nMeasurement rate = $(measurement_rate)",
+        label="$(fit.alpha)",
+        legend=:topleft
     )
+    
+    x = data.nqubits
+    y = fit.A * x.^fit.alpha
+    plot!(p, x, y)
+
+    if path !== nothing
+        filename = "entropy_scaling_in_$(pool_type)_for_$(measurement_rate)_rate_of_measurements.png"
+        savepath = joinpath(path, filename)
+        mkpath(dirname(abspath(savepath)))
+        savefig(p, savepath)
+        println("Plot is saved to: ", savepath)
+    end
+
+    return p
 end
 
 
-lalphas = []
-mrate = 0.0:0.05:0.3
-for m in mrate  
+pools = ["MatchgateCliffordPool", "ParityCliffordPool"]
 
-    data = process_measurement_rate("MatchgateCliffordPool", m)
+for pool_type in pools
+    lalphas = []
+    mrate = 0.0:0.05:0.3
+    for m in mrate  
 
-    p=plot_entropy_scaling(data, m; path=PLOT_DIR)
-    display(p)
+        data = process_measurement_rate(pool_type, m)
 
-    fit = fit_entropy(data)
-    push!(lalphas, fit.alpha)
-    println("Power-law fit:")
-    println("A = ", fit.A)
-    println("alpha = ", fit.alpha)
-    println("R² = ", fit.power_r2)
+        fit = fit_entropy(data)
+        push!(lalphas, fit.alpha)
+        println("Power-law fit:")
+        println("A = ", fit.A)
+        println("alpha = ", fit.alpha)
+        println("R² = ", fit.power_r2)
+        
+        println("\nLogarithmic fit:")
+        println("a = ", fit.a)
+        println("b = ", fit.b)
+        println("R² = ", fit.log_r2)
+        
+        p=plot_entropy_scaling(data, m, fit=fit, pool_type; path=PLOT_DIR)
+        display(p)
 
-    println("\nLogarithmic fit:")
-    println("a = ", fit.a)
-    println("b = ", fit.b)
-    println("R² = ", fit.log_r2)
+    end
+
+    p=plot(mrate, lalphas; marker=:circle,
+        linewidth=2,
+        xlabel="Measurement rate",
+        ylabel="Power law coefficient",
+        title="Entanglement scaling in $(pool_type) Circuit"
+        )
 
 end
-
-p=plot(mrate, lalphas; marker=:circle,
-    linewidth=2,
-    xlabel="Measurement rate",
-    ylabel="Power law coefficient",
-    title="Entanglement scaling in Matchgate Clifford Circuit")
